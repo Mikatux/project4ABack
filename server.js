@@ -1,6 +1,7 @@
 var restify = require('restify');
 var fs = require('fs');
-var simpleGit = require('simple-git')("/mnt/Disk2/websites/project_4a/");
+var simpleGitProd = require('simple-git')("/mnt/Disk2/websites/project_4a/");
+var simpleGitBeta = require('simple-git')("/mnt/Disk2/websites/project_4a_beta/");
 var mongoose = require('mongoose');
 
 initBdd();
@@ -43,39 +44,53 @@ function initBdd() {
 
 }
 
-function pull(req, res, next) {
+function pullprod(req, res, next) {
     res.send(200, 'Pull request the : ' + Date().toString());
-    simpleGit.pull();
+    simpleGitProd.pull();
     next();
 }
 
+
+function pullbeta(req, res, next) {
+    res.send(200, 'Pull request the : ' + Date().toString());
+    simpleGitBeta.pull();
+    next();
+}
 function respond(req, res, next) {
     res.send(200, 'hello ' + req.params.name);
     next();
 }
 
 
-function messages(req, res, next) {
-    var date = new Date(2015, 10, 05, 18, 15, 32, 00);
-    var date2 = new Date(2015, 10, 05, 18, 15, 05, 00);
-    date2.setMinutes(date2.getMinutes() + 1);
-    res.json([{
-            user: {"name": 'Mickael', 'lastname': 'Mayeur', 'img': 'https://lh3.googleusercontent.com/-T3xFMUajrKo/AAAAAAAAAAI/AAAAAAAABEE/P99SFd9JGng/s120-c/photo.jpg'},
-            message: 'Coucou',
-            type: "text",
-            date: date.toJSON()},
-        {
-            user: {name: 'Alexis', lastname: 'Soto', 'img': 'https://media.licdn.com/mpr/mpr/shrinknp_400_400/p/5/005/095/1ad/3b93e5d.jpg'},
-            message: 'Coucou',
-            type: "text",
-            date: date2.toJSON()}]);
-    res.send(200);
-    next();
-}
 var server = restify.createServer();
 server.use(restify.bodyParser());
+server.use(function (req, res, next) {
 
-server.get('/pull/', pull);
+    // Website you wish to allow to connect
+    if(req.headers.origin == "http://project.oversimplified.io"){
+    res.setHeader('Access-Control-Allow-Origin', 'http://project.oversimplified.io');
+    }
+    else if(req.headers.origin == "http://beta.oversimplified.io"){
+    res.setHeader('Access-Control-Allow-Origin', 'http://beta.oversimplified.io');
+    }
+
+    // Request methods you wish to allow
+    // res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, PATCH, DELETE');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+
+    // Request headers you wish to allow
+    res.setHeader('Access-Control-Allow-Headers', 'X-Requested-With,content-type');
+
+    // Set to true if you need the website to include cookies in the requests sent
+    // to the API (e.g. in case you use sessions)
+    res.setHeader('Access-Control-Allow-Credentials', true);
+
+    // Pass to next layer of middleware
+    next();
+});
+
+server.get('/pushbeta/', pullbeta);
+server.get('/pushprod/', pullprod);
 
 server.get('/messages/', getMessages);
 server.get('/message/:id', getMessage);
