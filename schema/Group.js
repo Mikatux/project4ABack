@@ -19,20 +19,21 @@ exports = module.exports = function (app, mongoose) {
             ref: "User"
         }
     });
+    
     groupSchema.methods.isInGroup = function (userId) {
 
-        if (this.members.indexOf(userId))
+        if (this.members.indexOf(userId)>0)
             return true;
         return false;
     };
 
     groupSchema.methods.addUser = function (userId) {
 
-        this.update({"$push": {"members": req.params.userId}}, function (arr, data) {
+        this.update({"$push": {"members": userId}}, function (arr, data) {
             if (arr) {
                 return false;
             }
-            else if (data === "") {
+            else if (data === "" || data == null) {
                 return false;
             }
             else {

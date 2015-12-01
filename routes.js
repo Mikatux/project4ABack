@@ -5,8 +5,6 @@ exports = module.exports = function (app) {
      app.get('/pushbeta/', pullbeta);
      app.get('/pushprod/', pullprod);
      
-     app.get('/messages/:id', getMessage);
-     app.del('/messages/:id', deleteMessage);
      */
 
 
@@ -67,6 +65,13 @@ exports = module.exports = function (app) {
     app.post('/login', login);
 
 
+    app.get('/messages/:id', require('./controllers/Message').getMessage);
+    app.get('/groups/:idGroup/messages/:id', require('./controllers/Message').getMessages);
+    app.delete('/messages/:id', require('./controllers/Message').deleteMessage);
+
+    app.get('/hot/', require('./controllers/Message').getMessages);
+
+
     app.get('/users/', require('./controllers/User').getUsers);
     app.get('/users/:id', require('./controllers/User').getUser);
     app.get('/users/:id/coworkers', require('./controllers/User').getCoworkers);
@@ -75,7 +80,7 @@ exports = module.exports = function (app) {
     app.post('/users', require('./controllers/User').newUser);
 
 
-    app.get('/groups/', require('./controllers/Group').getGroups);
+    app.get('/groups', require('./controllers/Group').getGroups);
     app.get('/groups/:id', require('./controllers/Group').getGroup);
     app.delete('/groups/:id', require('./controllers/Group').deleteGroup);
     app.post('/groups/:id/messages', require('./controllers/Group').newMessage);
@@ -84,7 +89,9 @@ exports = module.exports = function (app) {
     app.post('/groups/:id', require('./controllers/Group').modifyGroup);
     app.post('/groups', require('./controllers/Group').newGroup);
 
-    /*
-     app.post('/login', login);
-     */
+
+
+    app.get('/tester', require('./controllers/Tester').create);
+    app.delete('/tester', require('./controllers/Tester').delete);
+
 }

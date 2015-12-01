@@ -6,7 +6,7 @@ exports.getGroup = function (req, res) {
             res.json({error: "bad Id"});
             //console.error(arr);
         }
-        if (data == "") {
+        else if (data == "" || data == null) {
             res.json({error: "bad Id"});
         }
         else
@@ -36,15 +36,15 @@ exports.deleteGroup = function (req, res) {
                 data: "Bad Id "
             }); //console.error(arr);
         }
-        if (data == "") {
+        else if (group == "" || group == null) {
             res.json({
                 error: true,
                 data: "Bad Id "
             });
         }
         else {
-            for (x in group.members) {
-                userId = group.members[x];
+            for (var x in group.members) {
+                var userId = group.members[x];
                 req.app.db.models.User.update({_id: userId}, {"$pull": {"groups": group._id}}, function (arr, data) {
                 });
             }
@@ -61,7 +61,7 @@ exports.deleteGroup = function (req, res) {
 exports.newGroup = function (req, res)
 {
     console.log(req.body);
-    var groupModel = new Group(req.body);
+    var groupModel = new req.app.db.models.Group(req.body);
     groupModel.date = new Date();
     groupModel.save(function (err, group) {
         if (err) {
@@ -81,7 +81,6 @@ exports.newGroup = function (req, res)
                         error: false,
                         data: group
                     });
-                    next();
                 });
             });
         }
@@ -95,7 +94,7 @@ exports.modifyGroup = function (req, res)
             res.json({error: "bad Id"});
             //console.error(arr);
         }
-        if (data === "") {
+        else if (data == "" || data == null) {
             res.json({error: "bad Id"});
         }
         else {
@@ -106,22 +105,23 @@ exports.modifyGroup = function (req, res)
                         res.json({error: "bad Id"});
                         //console.error(arr);
                     }
-                    if (user === "") {
+                    else if (user === "" || data == null) {
                         res.json({error: "bad Id"});
                     }
                     else {
                         if (user.addInGroup(req.params.id)) {
                             res.json(data);
                         }
+                        else{
+                            
+                        }
                     }
                 });
 
             }
             else
-                res.json(data);
+                res.json({error: "In Group"});
 
-            // data.members+=req.params.usersId;
-            // res.send(data);
         }
     });
 }
@@ -133,7 +133,7 @@ exports.deleteUserGroup = function (req, res)
             res.json({error: "bad Id"});
             //console.error(arr);
         }
-        if (data === "") {
+        else if (data === "" || data == null) {
             res.json({error: "bad Id"});
         }
         else {
@@ -151,8 +151,6 @@ exports.deleteUserGroup = function (req, res)
                     });
                 }
             })
-            // data.members+=req.params.usersId;
-            // res.send(data);
         }
     });
 }
@@ -163,6 +161,7 @@ exports.newMessage = function (req, res)
     // console.log("Cookies: ", req.cookies)
     messageModel.date = new Date();
     messageModel.group = req.params.id;
+    console.log(req.body);
 
     req.app.db.models.User.findOne({_id: req.body.userId}, function (arr, data) {
         if (arr) {
@@ -173,7 +172,7 @@ exports.newMessage = function (req, res)
             });
             //console.error(arr);
         }
-        if (data == "") {
+        if (data == "" || data == null) {
             res.status(400);
             res.json({
                 error: true,
@@ -191,7 +190,7 @@ exports.newMessage = function (req, res)
                         data: "Error occured: " + err
                     })
                 } else {
-                    //req.app.listener.sockets.emit('message', message.toString());
+                    req.app.listener.sockets.emit('message', message.toString());
                     res.json({
                         error: false,
                         data: message
@@ -206,14 +205,12 @@ exports.getMessages = function (req, res)
 {
     var messagePerPage = 25;
     if (req.params.page != '') {
-        req.app.db.models.Message.find({group: req.params.id}).sort({date: 'desc'}).limit(messagePerPage).skip(messagePerPage * (req.body.page - 1)).exec(function (arr, data) {
-            //data = {coucou:"tata"};
-
+        req.app.db.models.Message.find({group: req.params.id}).populate("author").sort({date: 'desc'}).limit(messagePerPage).skip(messagePerPage * (req.body.page - 1)).exec(function (arr, data) {
             res.send(data);
         });
     }
     else {
-        req.app.db.models.Message.find({group: req.params.id}).sort({date: 'desc'}).populate('author').exec(function (arr, data) {
+        req.app.db.models.Message.find({group: req.params.id}).populate("author").sort({date: 'desc'}).populate('author').exec(function (arr, data) {
             //data = {coucou:"toto"};
             res.send(data);
         });

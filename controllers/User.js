@@ -6,7 +6,7 @@ exports.getUser = function (req, res) {
             res.json({error: "bad Id"});
             //console.error(arr);
         }
-        if (data == "") {
+        else if (data == "" || data == null) {
             res.json({error: "bad Id"});
         }
         else
@@ -47,15 +47,15 @@ exports.deleteUser = function (req, res) {
                 data: "Bad Id "
             }); //console.error(arr);
         }
-        if (data == "") {
+        else if (data == "" || data == null) {
             res.json({
                 error: true,
                 data: "Bad Id "
             });
         }
         else {
-            for (x in data.groups) {
-                groupId = data.groups[x];
+            for (var x in data.groups) {
+                var groupId = data.groups[x];
                 req.app.db.models.Group.update({_id: groupId}, {"$pull": {"members": data._id}}, function (arr, data) {
                 });
             }
@@ -71,44 +71,6 @@ exports.deleteUser = function (req, res) {
 
 exports.newUser = function (req, res)
 {
-    var find = false;
-    req.app.db.models.User.findOne({login: req.body.login}, function (arr, data) {
-        if (arr) {
-            //res.status(400);
-
-            //console.error(arr);
-        }
-        if (data == "" || data == null) {
-            //res.status(400);
-
-
-        }
-        else {
-            find = true;
-        }
-    });
-    req.app.db.models.User.findOne({email: req.body.email}, function (arr, data) {
-        if (arr) {
-            //res.status(400);
-
-            //console.error(arr);
-        }
-        if (data == "" || data == null) {
-            //res.status(400);
-
-
-        }
-        else {
-            find = true;
-        }
-    });
-    if (find == true) {
-        res.json({
-            error: true,
-            data: "Already exist"
-        });
-        next();
-    }
 
     var userModel = new req.app.db.models.User(req.body);
     userModel.date = new Date();
@@ -119,29 +81,76 @@ exports.newUser = function (req, res)
                 error: true,
                 data: "Error occured: " + err
             })
-        } else {
+        }
+        else if (user == "" || user == null) {
+            res.status(500);
+            res.json({
+                error: true,
+                data: "Error occured: " + err
+            })
+        }
+        else {
             res.json({
                 error: false,
                 data: user
             });
         }
     });
-    next();
 }
 
 
 exports.getMessages = function (req, res)
 {
-    req.app.db.models.User.findOne({_id: req.params.id}).populate("messages").exec( function (arr, data) {
+    req.app.db.models.User.findOne({_id: req.params.id}).populate("groups").exec(function (arr, data) {
         if (arr) {
-            res.json({error: "bad Id"});
-            //console.error(arr);
+            res.status(500);
+            res.json({error: "bad Id1"});
         }
-        if (data == "") {
-            res.json({error: "bad Id"});
+        else if (data == "" || data == null) {
+            res.status(500);
+            res.json({error: "bad Id2"});
         }
-        else
-            res.send(data);
+        else {
+            var messagess = [];
+            var groupss = 0;
+            for (var x in data.groups) {
+                var groupId = data.groups[x];
+                req.app.db.models.Message.find({group: groupId}).exec(function (arr, messages) {
+                    if (arr) {
+                        console.log(arr);
+                        /*
+                         res.status(500);
+                         res.json({
+                         error: true,
+                         data: "Error occured: " + arr
+                         })
+                         */
+                    }
+                    else if (messages == "" || messages == null) {
+                        /*
+                         res.status(500);
+                         res.json({
+                         error: true,
+                         data: "Error occured "
+                         })
+                         */
+
+                    }
+                    else {
+                        groupss++;
+                        for (var y in messages) {
+
+                            messagess.push(messages[y]);
+                        }
+                        if (groupss == data.groups.length - 1) {
+                            res.json(messagess);
+                        }
+
+                    }
+                });
+            }
+        }
     });
-    
+
+
 }

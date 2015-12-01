@@ -19,6 +19,12 @@ app.config = config;
 //setup the web server
 app.server = http.createServer(app);
 
+app.listener = io.listen(app.server);
+app.listener.on('connection', function (socket) {
+    console.log('a user connected');
+    socket.broadcast.emit('message', "connected");
+});
+
 //setup mongoose
 app.db = mongoose.createConnection(config.mongodb.uri);
 app.db.on('error', console.error.bind(console, 'mongoose connection error: '));
@@ -35,6 +41,9 @@ app.use(function (req, res, next) {
     }
     else if (req.headers.origin == "http://beta.oversimplified.io") {
         res.setHeader('Access-Control-Allow-Origin', 'http://beta.oversimplified.io');
+    }
+    else if (req.headers.origin == "http://api.oversimplified.io") {
+        res.setHeader('Access-Control-Allow-Origin', 'http://api.oversimplified.io');
     }
 
     // Request methods you wish to allow
